@@ -3,19 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-		case "GET":
-			return
-		case "POST":
-			return
+	case "GET":
+		return
+	case "POST":
+		return
 	}
 	_, err := w.Write([]byte("Hello world\n"))
 	if err != nil {
@@ -53,14 +54,14 @@ func (h *HttpHandler) handleCreateUrl(w http.ResponseWriter, r *http.Request) {
 	}
 	newUrlKey := generateRandomKey()
 	h.storage[newUrlKey] = data.Url
-	response := PutResponse {
+	response := PutResponse{
 		Key: newUrlKey,
 	}
 	rawResponse, _ := json.Marshal(response)
 
 	_, err = w.Write(rawResponse)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusFound)
 		return
 	}
 
@@ -76,7 +77,7 @@ func (h *HttpHandler) handleGetUrl(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No such url", http.StatusNotFound)
 		return
 	}
-	http.Redirect(w, r, url, 302)
+	http.Redirect(w, r, url, http.StatusPermanentRedirect)
 }
 
 func main() {
@@ -91,13 +92,12 @@ func main() {
 	r.HandleFunc("/api/urls", handler.handleCreateUrl).Methods("POST")
 
 	srv := &http.Server{
-		Handler: r,
-		Addr: "0.0.0.0:8080",
+		Handler:      r,
+		Addr:         "0.0.0.0:8080",
 		WriteTimeout: 15 * time.Second,
-		ReadTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
 	}
 
 	log.Printf("Start serving on %s", srv.Addr)
 	log.Fatal(srv.ListenAndServe())
 }
-
